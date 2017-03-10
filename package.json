@@ -4,12 +4,18 @@
   "description": "シンプルな静的サイトジェネレータ",
   "main": "dist/index.js",
   "scripts": {
-    "build": "gulp"
+    "prepublish": "gulp",
+    "build": "gulp",
+    "test": "node bin/koto sample www"
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "assets"
   ],
+  "bin": {
+    "koto": "bin/koto"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lambdataro/koto.git"
@@ -20,5 +26,10 @@
     "babel-preset-env": "^1.2.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2"
+  },
+  "dependencies": {
+    "ejs": "^2.5.6",
+    "fs-extra": "^2.0.0",
+    "marked": "^0.3.6"
   }
 }
