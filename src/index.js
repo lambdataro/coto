@@ -8,24 +8,25 @@ export function main() {
 
   if (process.argv.length !== 4) {
     console.log("使い方: koto [ディレクトリ|設定ファイル] [出力先]");
-    exit(1);
+    process.exit(1);
   }
 
   (async function () {
-    const arg2 = path.resolve(process.cwd(), process.argv[2]);
+    const arg2 = path.join(process.cwd(), process.argv[2]);
     const stats = await fsStat(arg2);
-    const base = stats.isDirectory() ? arg2 : path.dirname(arg2);
     const config = stats.isDirectory() ? {} : JSON.parse(await readFile(arg2));
-    const ctx = await makeInitContext(config);
-    const out = path.resolve(process.cwd(), process.argv[3]);
+    const base = stats.isDirectory() ? arg2 : path.dirname(arg2);
+    const out = path.join(process.cwd(), process.argv[3]);
+    const ctx = await makeInitContext(config, out);
+    await createMenu(ctx, base, out);
     for (let i = 0; i < ctx.directories.length; i++) {
       const entry = ctx.directories[i];
-      const baseDir = path.resolve(base, entry.src);
-      const outDir = path.resolve(out, entry.dst);
+      const baseDir = path.join(base, entry.src);
+      const outDir = path.join(out, entry.dst);
+      if (!entry.overwrite) await emptyDir(outDir);
       if (entry.convert) {
         await convertDir(ctx, baseDir, outDir);
       } else {
-        if (!ctx.overwrite) await emptyDir(outDir);
         await copy(baseDir, outDir);
       }
     }
@@ -51,18 +52,19 @@ function setupMarked() {
 /**
  * 初期文脈を作る
  */
-async function makeInitContext(config) {
+async function makeInitContext(config, base) {
   const ctx = {};
   ctx.title = readStringProperty(config, "title");
+  ctx.base = base;
   ctx.templatePath = readStringProperty(config, "templatePath", 
-    path.resolve(__dirname, "..", "assets", "default.ejs")
+    path.join(__dirname, "..", "assets", "default.ejs")
   );
   ctx.templateText = await readFile(ctx.templatePath, "utf8");
   if (config.directories) {
     ctx.directories = config.directories.map(entry => {
       return {
         src: readStringProperty(entry, "src", "."),
-        dst: readStringProperty(entry, "dst", "./"),
+        dst: readStringProperty(entry, "dst", "."),
         convert: typeof entry.convert === "boolean" ? entry.convert : true,
         overwrite: typeof entry.overwrite === "boolean" ? entry.overwrite : false
       };
@@ -75,18 +77,56 @@ async function makeInitContext(config) {
       overwrite: false
     }];
   }
+  ctx.menuitems = config.menuitems ||
+    [
+      {
+        name: "記事",
+        type: "auto",
+        index: 0
+      }
+    ];
   return ctx;
 }
 
+/**
+ * 文字列プロパティの読み取り。
+ */
 function readStringProperty(obj, propertyName, defalutValue = "") {
   return typeof obj[propertyName] === "string" ? obj[propertyName] : defalutValue
+}
+
+/**
+ * メニューを作る。
+ */
+async function createMenu(ctx, baseDir, outDir) {
+  for (let i = 0; i < ctx.menuitems.length; i++) {
+    if (ctx.menuitems[i].type === "auto") {
+      const items = [];
+      const entry = ctx.directories[ctx.menuitems[i].index];
+      const srcDir = path.join(baseDir, entry.src);
+      const files = (await readDir(srcDir)).map(name => path.join(srcDir, name));
+      for (let j = 0; j < files.length; j++) {
+        if (path.extname(files[j]) === ".md") {
+          const relpath = path.relative(srcDir, files[j]);
+          const outpath = path.join(outDir, entry.dst, path.dirname(relpath), 
+            path.basename(relpath, ".md") + ".html"
+          );
+          const mdText = await readFile(files[j], "utf8");
+          items.push({
+            name: await extractPageTitle({ title: "" }, marked.lexer(mdText)),
+            link: path.relative(outDir, outpath)
+          });
+        }
+      }
+      ctx.menuitems[i].items = items;
+    }
+  }
 }
 
 /**
  * ディレクトリ内のMarkdownをHTMLに変換する。
  */
 async function convertDir(ctx, baseDir, outDir) {
-  if (!ctx.overwrite) await emptyDir(outDir);
   const files = await listFiles(baseDir);
   for (let filename of files) {
     if (path.extname(filename) === ".md") {
@@ -94,7 +134,7 @@ async function convertDir(ctx, baseDir, outDir) {
     } else {
       await copy(
         filename,
-        path.resolve(outDir, path.relative(baseDir, filename))
+        path.join(outDir, path.relative(baseDir, filename))
       );
     }
   }
@@ -106,12 +146,21 @@ async function convertDir(ctx, baseDir, outDir) {
 async function convertFile(filename, ctx, baseDir, outDir) {
   const mdText = await readFile(filename, "utf8");
   const tokens = marked.lexer(mdText);
-  const title = await extractPageTitle(ctx, tokens);
   const content = marked.parser(tokens);
-  const htmlText = fixLinks(ejs.render(ctx.templateText, {title, content}));
+  const pagetitle = await extractPageTitle(ctx, tokens);
   const relpath = path.relative(baseDir, filename);
-  const outFilename = path.join(outDir, path.basename(relpath, ".md") + ".html");
-  await writeFile(outFilename, htmlText, {encoding: "utf8"});
+  const outFilename = path.join(outDir, path.dirname(relpath), path.basename(relpath, ".md") + ".html");
+  const basepath = path.dirname(path.relative(outFilename, ctx.base));
+  const htmlText = ejs.render(ctx.templateText, {
+    sitename: ctx.title,
+    basepath,
+    title: pagetitle,
+    menuitems: ctx.menuitems,
+    content: fixLinks(content, str => {
+      return path.relative(ctx.base, path.join(path.dirname(outFilename), str))
+    })
+  });
+  await outputFile(outFilename, htmlText, { encoding: "utf8" });
 }
 
 /**
@@ -130,10 +179,16 @@ async function extractPageTitle(ctx, tokens) {
 /**
  * aタグ内の拡張子.mdを.htmlに変換する。
  */
-function fixLinks(htmlText) {
+function fixLinks(htmlText, pathConverter) {
   return htmlText.replace(
-    /<a href=\"(?:\w|-|\.|\/)+(\.md)\">/g,
-    str => str.replace(/\.md/, ".html")
+    /href=\"(?:\w|-|\.|\/)+(\.md)\"/g,
+    str => str.replace(/.md\"/, ".html\"")
+  ).replace(
+    /(?:href|src)=\"(\w|-|\.|\/)+"/g,
+    str => str.indexOf("://") === -1 ?
+      str.replace(/\"(\w|-|\.|\/)+\"/,
+        s => `"${pathConverter(s.substring(1, s.length - 1))}"`) :
+      str
   );
 }
 
@@ -159,7 +214,7 @@ async function listFiles(dirName) {
 
 // Promise化したfs関数。
 const readFile = fromNode(fs.readFile.bind(fs));
-const writeFile = fromNode(fs.writeFile.bind(fs));
+const outputFile = fromNode(fs.outputFile.bind(fs));
 const readDir = fromNode(fs.readdir.bind(fs));
 const fsStat = fromNode(fs.stat.bind(fs));
 const copy = fromNode(fs.copy.bind(fs));
@@ -170,7 +225,7 @@ const emptyDir = fromNode(fs.emptyDir.bind(fs));
  */
 function fromNode(f) {
   return (...args) =>
-    new Promise((resolve, reject) =>
-      f(...args, (err, data) => err ? reject(err) : resolve(data))
+    new Promise((join, reject) =>
+      f(...args, (err, data) => err ? reject(err) : join(data))
     );
 }

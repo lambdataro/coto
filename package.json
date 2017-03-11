@@ -5,8 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "prepublish": "gulp",
-    "build": "gulp",
-    "test": "node bin/koto sample/site.json www"
+    "build": "gulp"
   },
   "files": [
     "dist",
