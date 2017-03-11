@@ -2,6 +2,8 @@
 
 ここに文章を入力します。
 
-```
-print("hello, world.\n");
+```js
+function f(x, y) {
+  return x * y;
+}
 ```

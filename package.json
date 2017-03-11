@@ -6,7 +6,7 @@
   "scripts": {
     "prepublish": "gulp",
     "build": "gulp",
-    "test": "node bin/koto sample www"
+    "test": "node bin/koto sample/site.json www"
   },
   "files": [
     "dist",
