@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "prepublish": "gulp",
-    "build": "gulp"
+    "build": "gulp",
+    "test": "node bin/koto test/site02/site.json test/www"
   },
   "files": [
     "dist",
@@ -24,7 +25,8 @@
   "devDependencies": {
     "babel-preset-env": "^1.2.1",
     "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2"
+    "gulp-babel": "^6.1.2",
+    "mockfs": "^0.1.5"
   },
   "dependencies": {
     "ejs": "^2.5.6",
