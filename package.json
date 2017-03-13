@@ -1,6 +1,6 @@
 {
   "name": "coto",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "シンプルな静的サイトジェネレータ",
   "main": "dist/index.js",
   "scripts": {
