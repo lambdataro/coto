@@ -2,8 +2,11 @@ const fs = require("fs-extra");
 const path = require("path");
 const ejs = require("ejs");
 const marked = require("marked");
+const packageJson = require("../package.json");
 
 export function main() {
+  console.log(`${packageJson.name} ${packageJson.version}`);
+
   setupMarked();
 
   if (process.argv.length !== 4) {
@@ -54,7 +57,7 @@ function setupMarked() {
  */
 async function makeInitContext(config, base) {
   const ctx = {};
-  ctx.title = readStringProperty(config, "title");
+  ctx.title = readStringProperty(config, "title", "");
   ctx.base = base;
   ctx.templatePath = readStringProperty(config, "templatePath", 
     path.join(__dirname, "..", "assets", "default.ejs")
@@ -113,7 +116,7 @@ async function createMenu(ctx, baseDir, outDir) {
           );
           const mdText = await readFile(files[j], "utf8");
           items.push({
-            name: await extractPageTitle({ title: "" }, marked.lexer(mdText)),
+            name: await extractPageTitle({title: ""}, marked.lexer(mdText)),
             link: path.relative(outDir, outpath)
           });
         }
@@ -156,7 +159,7 @@ async function convertFile(filename, ctx, baseDir, outDir) {
     basepath,
     title: pagetitle,
     menuitems: ctx.menuitems,
-    content: fixLinks(content, str => {
+    content: fixLinks(content, path.basename(relpath), str => {
       return path.relative(ctx.base, path.join(path.dirname(outFilename), str))
     })
   });
@@ -179,15 +182,21 @@ async function extractPageTitle(ctx, tokens) {
 /**
  * aタグ内の拡張子.mdを.htmlに変換する。
  */
-function fixLinks(htmlText, pathConverter) {
+function fixLinks(htmlText, basename, pathConverter) {
   return htmlText.replace(
-    /href=\"(?:\w|-|\.|\/)+(\.md)\"/g,
-    str => str.replace(/.md\"/, ".html\"")
-  ).replace(
-    /(?:href|src)=\"(\w|-|\.|\/)+"/g,
+    /href=\"#/g,
+    str => `href="${basename}#`
+  )
+  .replace(
+    /href=\"(?:\w|-|\.|\/)+(\.md)(#(\w|-)+)?\"/g,
+    str => str.replace(/.md(?=[\"#])/, ".html")
+  )
+  
+  .replace(
+    /(?:href|src)=\"(\w|-|\.|\/)+(#(\w|-)+)?"/g,
     str => str.indexOf("://") === -1 ?
-      str.replace(/\"(\w|-|\.|\/)+\"/,
-        s => `"${pathConverter(s.substring(1, s.length - 1))}"`) :
+      str.replace(/\"(\w|-|\.|\/)+(#|\")/,
+        s => `"${pathConverter(s.substring(1, s.length - 1)) + s.substring(s.length-1)}`) :
       str
   );
 }
