@@ -10,7 +10,7 @@ export function main() {
   setupMarked();
 
   if (process.argv.length !== 4) {
-    console.log("使い方: koto [ディレクトリ|設定ファイル] [出力先]");
+    console.log("使い方: coto [ディレクトリ|設定ファイル] [出力先]");
     process.exit(1);
   }
 

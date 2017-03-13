@@ -1,5 +1,5 @@
-# koto
-kotoはシンプルな静的サイトジェネレータです。
+# coto
+cotoはシンプルな静的サイトジェネレータです。
 複数のMarkdownが含まれたディレクトリから静的サイトを生成できます。
 
 ## インストール
@@ -7,7 +7,7 @@ kotoはシンプルな静的サイトジェネレータです。
 node.js (Version 6 以上) をインストールして `npm` コマンドでインストールします。
 
 ```
-$ npm install -g koto
+$ npm install -g coto
 ```
 
 ## 簡単な使い方
@@ -16,7 +16,7 @@ $ npm install -g koto
 ディレクトリ `www` に書き出すには以下のように入力します。
 
 ```sh
-$ koto site www
+$ coto site www
 ```
 
 ## 高度な使い方
@@ -26,7 +26,7 @@ $ koto site www
 ディレクトリ `www` に書き出すには以下のように入力します。
 
 ```sh
-$ koto site.json www
+$ coto site.json www
 ```
 
 ## site.json

@@ -1,12 +1,12 @@
 {
-  "name": "koto",
+  "name": "coto",
   "version": "0.0.1",
   "description": "シンプルな静的サイトジェネレータ",
   "main": "dist/index.js",
   "scripts": {
     "prepublish": "gulp",
     "build": "gulp",
-    "test": "node bin/koto test/site02/site.json test/www"
+    "test": "node bin/coto test/site02/site.json test/www"
   },
   "files": [
     "dist",
@@ -14,11 +14,11 @@
     "assets"
   ],
   "bin": {
-    "koto": "bin/koto"
+    "coto": "bin/coto"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lambdataro/koto.git"
+    "url": "git+https://github.com/lambdataro/coto.git"
   },
   "author": "lambdataro",
   "license": "MIT",
