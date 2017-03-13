@@ -1,0 +1,56 @@
+{
+  "title": "私のウェブサイト",
+  "directories": [
+    {
+      "src": "./md01",
+      "dst": "./",
+      "convert": true,
+      "overwrite": false
+    },
+    {
+      "src": "../site01/",
+      "dst": "./sub",
+      "convert": true,
+      "overwrite": false
+    },
+    {
+      "src": "./addition",
+      "dst": "./sub",
+      "convert": true,
+      "overwrite": true
+    }
+  ],
+  "menuitems": [
+    {
+      "name": "記事",
+      "type": "auto",
+      "index": 0
+    },
+    {
+      "name": "子ページ",
+      "type": "list",
+      "items": [
+        {
+          "name": "子ページ1",
+          "link": "./sub/pages/page1.html"
+        },
+        {
+          "name": "子ページ2",
+          "link": "./sub/pages/page2.html"
+        },
+        {
+          "name": "----",
+          "link": ""
+        },
+        {
+          "name": "追加ページ",
+          "link": "./sub/addition.html"
+        }
+      ]
+    },
+    {
+      "name": "GitHub",
+      "link": "https://github.com/"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "coto",
+  "version": "0.0.1",
+  "description": "シンプルな静的サイトジェネレータ",
+  "main": "dist/index.js",
+  "scripts": {
+    "prepublish": "gulp",
+    "build": "gulp",
+    "test": "node bin/coto test/site02/site.json test/www"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "assets"
+  ],
+  "bin": {
+    "coto": "bin/coto"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lambdataro/coto.git"
+  },
+  "author": "lambdataro",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-preset-env": "^1.2.1",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2"
+  },
+  "dependencies": {
+    "ejs": "^2.5.6",
+    "fs-extra": "^2.0.0",
+    "marked": "^0.3.6"
+  }
+}
