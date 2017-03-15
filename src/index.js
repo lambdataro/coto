@@ -117,7 +117,7 @@ async function createMenu(ctx, baseDir, outDir) {
           const mdText = await readFile(files[j], "utf8");
           items.push({
             name: await extractPageTitle({title: ""}, marked.lexer(mdText)),
-            link: path.relative(outDir, outpath)
+            link: path.relative(outDir, outpath).replace(/\\/g, "/")
           });
         }
       }
@@ -149,8 +149,8 @@ async function convertDir(ctx, baseDir, outDir) {
 async function convertFile(filename, ctx, baseDir, outDir) {
   const mdText = await readFile(filename, "utf8");
   const tokens = marked.lexer(mdText);
-  const content = marked.parser(tokens);
   const pagetitle = await extractPageTitle(ctx, tokens);
+  const content = marked.parser(tokens);
   const relpath = path.relative(baseDir, filename);
   const outFilename = path.join(outDir, path.dirname(relpath), path.basename(relpath, ".md") + ".html");
   const basepath = path.dirname(path.relative(outFilename, ctx.base));
@@ -195,9 +195,10 @@ function fixLinks(htmlText, basename, pathConverter) {
   .replace(
     /(?:href|src)=\"(\w|-|\.|\/)+(#(\w|-)+)?"/g,
     str => str.indexOf("://") === -1 ?
-      str.replace(/\"(\w|-|\.|\/)+(#|\")/,
-        s => `"${pathConverter(s.substring(1, s.length - 1)) + s.substring(s.length-1)}`) :
-      str
+      str.replace(
+        /\"(\w|-|\.|\/)+(#|\")/,
+        s => (`"${pathConverter(s.substring(1, s.length - 1)) + s.substring(s.length-1)}`).replace(/\\/g, "/")
+      ) : str
   );
 }
 
