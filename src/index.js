@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const ejs = require("ejs");
 const marked = require("marked");
+const mdinclude = require("mdinclude");
 const packageJson = require("../package.json");
 
 export function main() {
@@ -148,7 +149,7 @@ async function convertDir(ctx, baseDir, outDir) {
  */
 async function convertFile(filename, ctx, baseDir, outDir) {
   const mdText = await readFile(filename, "utf8");
-  const tokens = marked.lexer(mdText);
+  const tokens = marked.lexer(mdinclude(mdText, { sourcePath: filename }));
   const pagetitle = await extractPageTitle(ctx, tokens);
   const content = marked.parser(tokens);
   const relpath = path.relative(baseDir, filename);

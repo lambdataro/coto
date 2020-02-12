@@ -4,3 +4,6 @@
 
 ## 画像
 ![車](./images/car.png)
+
+## コード
+<!-- #code ./codes/hello.c -->
