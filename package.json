@@ -31,7 +31,7 @@
   "dependencies": {
     "ejs": "^3.0.1",
     "fs-extra": "^8.1.0",
-    "marked": "^0.8.0",
+    "marked": "^4.0.10",
     "mdinclude": "^0.7.1"
   }
 }
